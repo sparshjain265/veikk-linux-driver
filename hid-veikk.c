@@ -138,15 +138,15 @@ static const s8 a15_pro_usage_pusage_map[256] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, -1, -1, -1, // 4
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 5
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 6
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 7
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// 8
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// 9
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// a
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// b
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// c
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// d
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// e
-	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,					// f
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // -1
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 8
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 9
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // a
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // b
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // c
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // d
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // e
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // f
 };
 //
 
@@ -220,6 +220,7 @@ static int veikk_keyboard_event(struct veikk_keyboard_report *evt,
 	u8 pusages[VEIKK_BTN_COUNT] = {0}, i;
 	s8 pusage;
 	const int *pusage_key_map;
+	s8 left_ctrl = evt->ctrl_modifier;
 
 	// fill pseudo-usages map; this is independent of device
 	for (i = 0; i < /*6*/ VEIKK_BTN_COUNT && evt->btns[i]; ++i)
@@ -230,12 +231,18 @@ static int veikk_keyboard_event(struct veikk_keyboard_report *evt,
 		++pusages[pusage];
 	}
 
-	// if both Ctrl+V and V are pressed (A50)
-	if (pusages[3] && evt->ctrl_modifier)
-	{
-		--pusages[3];
-		++pusages[5];
-	}
+	// not required for A15 Pro
+	// // if both Ctrl+V and V are pressed (A50)
+	// if (pusages[3] && evt->ctrl_modifier)
+	// {
+	// 	--pusages[3];
+	// 	++pusages[5];
+	// }
+
+	// if K1/K2; assume control - allows to zoom in/out
+	left_ctrl = pusages[3] || pusages[4] || evt->ctrl_modifier;
+	if (pusages[3] || pusages[4])
+		input_report_key(input, KEY_LEFTCTRL, left_ctrl);
 
 	// if default mapping; also report ctrl
 	if (VEIKK_DFL_BTNS || btn_map == veikk_no_btns)
@@ -609,19 +616,20 @@ static struct veikk_model veikk_model_0x0006 = {
 	// 3, 4 (K1, K2), 5, 6 (K3, K4), 7, 8 (K5, K6), 9, 10 (K7, K8),
 	// 11, 12 (K9, K10), 13, 14 (K11, K12 - disabled for now)
 	.btn_map = (int[]){
-		KEY_SPACE,
-		KEY_DOWN,
-		KEY_UP,
-		KEY_1,
-		KEY_2,
-		KEY_3,
-		KEY_4,
-		KEY_5,
-		KEY_6,
-		KEY_7,
-		KEY_8,
-		KEY_9,
-		KEY_0}};
+		KEY_SPACE, // working
+		KEY_DOWN,  // working
+		KEY_UP,	   // working
+		KEY_MINUS, // working (ctrl implicit)
+		KEY_EQUAL, // working (ctrl implicit)
+		KEY_3,	   // working
+		KEY_4,	   // working
+		KEY_5,	   // not working
+		KEY_6,	   // not working
+		KEY_7,	   // not working
+		KEY_8,	   // working
+		KEY_9,	   // not working
+		KEY_0,	   // not working
+	}};
 static struct veikk_model veikk_model_0x1001 = {
 	.name = "VEIKK VK1560",
 	.prod_id = 0x1001,
