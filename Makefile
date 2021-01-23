@@ -21,7 +21,11 @@ clean:
 uninstall:
 	modprobe -r veikk
 
-test: uninstall all install clean
+safe: all install clean
+	sudo modprobe veikk
+	
+
+test: uninstall safe
 	sudo modprobe veikk
 	
 endif
