@@ -25,7 +25,7 @@ safe: all install clean
 	sudo modprobe veikk
 	
 
-test: uninstall safe
+test: safe uninstall all install clean 
 	sudo modprobe veikk
 	
 endif
